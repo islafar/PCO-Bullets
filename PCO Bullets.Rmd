@@ -1,0 +1,130 @@
+---
+title: "PCO Bullets"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+#load libraries
+library(googlesheets4)
+library(tidyverse)
+library(zoo)
+library(lubridate)
+library(scales)
+library(hms)
+library(ggplot2)
+library(flextable)
+library(janitor)
+library(officer)
+```
+
+
+```{r Get Data, code=xfun::read_utf8('PCO_get_data.R'), results='asis', message=FALSE, warning=FALSE}
+```
+
+```{r Generate Lab Numbers, code=xfun::read_utf8('PCO_SALT.R'), results='asis', message=FALSE, warning=FALSE}
+```
+
+```{r Generate Figures, code=xfun::read_utf8('PCO_tables_plots.R'), results='asis', message=FALSE, warning=FALSE}
+```
+
+# TABLE 1
+
+```{r Table1, message=FALSE, warning=FALSE, ft.align='left'}
+Table1 <- flextable(table1)
+
+big_border = fp_border(color="black", width=2)
+border_v = fp_border(color="black")
+border_h = fp_border(color="black")
+
+Table1 <- border_outer(Table1, part = "all", border = big_border)
+Table1 <- border_inner_v(Table1, part = "all", border = border_v)
+Table1 <- border_inner_h(Table1, part = "all", border = border_h)
+
+Table1 <- align(Table1, j=1, align = "center",part = "header")
+Table1 <- align(Table1, j=1, align = "left",part = "body")
+Table1 <- align(Table1, j=2:12, align = "center",part = "all")
+Table1 <- height(Table1, height=.52, part = "header")
+Table1 <- height(Table1, height=.26, part = "body")
+Table1 <- width(Table1, j=c(3,4,7,8,9,10,11), width = 1.5)
+Table1 <- width(Table1, j=12, width = 1.6)
+Table1 <- fontsize(Table1, size = 12, part="header")
+Table1 <- fontsize(Table1, size = 11, part="body")
+Table1 <- bg(Table1, bg="gray70", part="header")
+Table1 <- bg(Table1, bg="gray80", i=15, part="body")
+  
+Table1
+```
+
+# TABLE 2
+
+```{r Table2, message=FALSE, warning=FALSE, ft.align='left'}
+Table2 <- flextable(table2)
+
+big_border = fp_border(color="black", width=2)
+border_v = fp_border(color="black")
+border_h = fp_border(color="black")
+
+Table2 <- border_outer(Table2, part = "all", border = big_border)
+Table2 <- border_inner_v(Table2, part = "all", border = border_v)
+Table2 <- border_inner_h(Table2, part = "all", border = border_h)
+
+Table2 <- align(Table2, j=1, align = "center",part = "header")
+Table2 <- align(Table2, j=1, align = "left",part = "body")
+Table2 <- align(Table2, j=2:15, align = "center",part = "all")
+Table2 <- width(Table2, j=2:15, width = 1.3)
+Table2 <- bg(Table2, j=1, bg="gray70", part="header")
+Table2 <- bg(Table2, i=15, bg="gray80", part="body")
+Table2 <- bg(Table2, j=c(2,3), bg="lightblue1", part="header")
+Table2 <- bg(Table2, j=c(4,5), bg="indianred1", part="header")
+Table2 <- bg(Table2, j=c(6,7), bg="lightblue2", part="header")
+Table2 <- bg(Table2, j=c(8,9), bg="indianred2", part="header")
+Table2 <- bg(Table2, j=c(10,11), bg="lightblue3", part="header")
+Table2 <- bg(Table2, j=c(12,13), bg="indianred3", part="header")
+Table2 <- bg(Table2, j=c(14,15), bg="lightblue", part="header")
+Table2 <- fontsize(Table2, size = 12, part="header")
+Table2 <- fontsize(Table2, size = 11, part="body")
+
+Table2
+```
+
+# 14-DAY TREND ANALYSIS
+
+```{r Plot 1, results='asis', message=FALSE, warning=FALSE, fig.height=4, fig.width=6}
+plot(plot1)
+```
+
+```{r Plot 2, results='asis', message=FALSE, warning=FALSE, fig.height=4, fig.width=6}
+plot(plot2)
+```
+
+```{r Plot 3, results='asis', message=FALSE, warning=FALSE, fig.height=4, fig.width=6}
+plot(plot3)
+```
+
+# LTC DEATHS
+
+```{r Table3, message=FALSE, warning=FALSE, ft.align='left'}
+Table3 <- flextable(table3)
+
+big_border = fp_border(color="black", width=2)
+border_v = fp_border(color="black")
+border_h = fp_border(color="black")
+
+Table3 <- border_outer(Table3, part = "all", border = big_border)
+Table3 <- border_inner_v(Table3, part = "all", border = border_v)
+Table3 <- border_inner_h(Table3, part = "all", border = border_h)
+
+Table3 <- align(Table3,align = "center",part = "all")
+Table3 <- height(Table3, height=.52, part = "header")
+Table3 <- height(Table3, height=.26, part = "body")
+Table3 <- width(Table3, j=4, width = 1.4)
+Table3 <- fontsize(Table3, size = 12, part="header")
+Table3 <- fontsize(Table3, size = 11, part="body")
+Table3 <- bg(Table3, bg="gray70", part="header")
+
+Table3
+```
