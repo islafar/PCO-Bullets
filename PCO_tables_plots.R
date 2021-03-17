@@ -12,7 +12,7 @@ table1a <- daily_numbers %>%
 #         numdeathstoday=comma(numdeathstoday,accuracy=1))
 
 table1 <- table1a %>%
-  left_join(DailySALT_Cumulative %>% filter(Date==max(Date)) %>% select(-Date,-value_carried_forward), 
+  left_join(DailySALT_Cumulative %>% filter(Date==max(Date)-1) %>% select(-Date,-value_carried_forward), 
             by=c("prname"="Jurisdiction")) %>%
   mutate(percentpos=cum_positive_tests/cum_tests_performed) %>%
   mutate(testrateper=round(cum_tests_performed/Population*1000)) %>%

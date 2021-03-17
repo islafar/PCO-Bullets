@@ -84,7 +84,7 @@ SALT <- salt_raw %>%
 
 #because SK sometimes submits same-day lab testing data, can't rely on using max(Date), instead will do based on report_date, which is Sys.Date()
 SALT2 <- SALT %>%
-  filter(Date>=report_date-7 & Date<report_date) %>%
+  filter(Date>=report_date-8 & Date<report_date-1) %>%
   arrange(Jurisdiction,datetime)
 
 Provincial <- SALT2 %>%
