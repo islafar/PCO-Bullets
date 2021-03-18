@@ -1,8 +1,8 @@
 ---
-title: "PCO Bullets"
+title: ""
 output:
-  word_document: default
-  html_document: default
+  word_document:
+  reference_docx: styledoc/styles.docx
 ---
 
 ```{r setup, include=FALSE}
@@ -31,7 +31,9 @@ library(officer)
 ```{r Generate Figures, code=xfun::read_utf8('PCO_tables_plots.R'), results='asis', message=FALSE, warning=FALSE}
 ```
 
-# TABLE 1
+::: {custom-style="Style3"}
+TABLE 1
+:::
 
 ```{r Table1, message=FALSE, warning=FALSE, ft.align='left'}
 Table1 <- flextable(table1)
@@ -46,11 +48,11 @@ Table1 <- border_inner_h(Table1, part = "all", border = border_h)
 
 Table1 <- align(Table1, j=1, align = "center",part = "header")
 Table1 <- align(Table1, j=1, align = "left",part = "body")
-Table1 <- align(Table1, j=2:12, align = "center",part = "all")
+Table1 <- align(Table1, j=2:13, align = "center",part = "all")
 Table1 <- height(Table1, height=.52, part = "header")
 Table1 <- height(Table1, height=.26, part = "body")
-Table1 <- width(Table1, j=c(3,4,7,8,9,10,11), width = 1.5)
-Table1 <- width(Table1, j=12, width = 1.6)
+Table1 <- width(Table1, j=c(3,4,7,8,9,13), width = 1.5)
+Table1 <- width(Table1, j=c(10,11,12), width = 1.75)
 Table1 <- fontsize(Table1, size = 12, part="header")
 Table1 <- fontsize(Table1, size = 11, part="body")
 Table1 <- bg(Table1, bg="gray70", part="header")

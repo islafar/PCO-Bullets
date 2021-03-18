@@ -150,7 +150,98 @@ Cabinet_table_formatted_old<-Cabinet_table_unformatted%>%
          `Average number of tests performed per day (past 7 days)`= Avg_tests_per_day,
          `Average number of tests performed per day per 1,000 population (past 7 days)` = Avg_tests_per_1000pop)
 
-#write_xlsx(list(DailySALT_Incr=DailySALT_Incremental, DailySALT_Cum=DailySALT_Cumulative, PCO_Data=Cabinet_table_formatted_old), paste0("//Ncr-a_irbv2s/irbv2/PHAC/IDPCB/CIRID/VIPS-SAR/EMERGENCY PREPAREDNESS AND RESPONSE HC4/EMERGENCY EVENT/WUHAN UNKNOWN PNEU - 2020/DATA AND ANALYSIS/NML TESTING DATA/SALT/Output/", Today, "TestingNum.xlsx"), format_headers = FALSE )
+############################################################################################################################################################################################################
+############################################################################################################################################################################################################
+############################################## WEEKLY TESTING DATA #########################################################################################################################################
 
-#rm(list = setdiff(ls(), c("Cabinet_table_unformatted","Cabinet_table_formatted_old","DailySALT_Cumulative",
-#                          "DailySALT_Incremental")))
+SALT_weekly <- salt_raw %>%
+  select(Report.Date,Jurisdiction,Tests.Performed,Positive.Test.Results,Percent.Positive.Test.Results, Latest.Update.Date) %>%
+  rename(tests_performed=Tests.Performed,
+         positive_tests=Positive.Test.Results,
+         percent_positive=Percent.Positive.Test.Results) %>%
+  mutate(update_date = as.Date(str_sub(Latest.Update.Date, 1, 10)),
+         Date = as.Date(str_sub(Report.Date, 1, 10)),
+         Time = as_hms(str_sub(Report.Date, 13, 20)),
+         datetime = strptime(paste(Date, Time), "%Y-%m-%d%H:%M:%S"),
+         positive_tests = ifelse (!is.na(positive_tests), positive_tests, round(tests_performed*(percent_positive/100))),  #some PTs (AB, ON) only report % positive
+         percent_positive = ifelse (!is.na(percent_positive), percent_positive, round((positive_tests/tests_performed)*100, digits = 3)))
+
+SALT_weekly2 <- SALT_weekly %>%
+  select(-Latest.Update.Date,-update_date)%>%
+  mutate(Start_of_week=floor_date(Date, "week"),
+         End_of_week=date(Start_of_week)+6,
+         Week=paste(str_sub(months(Start_of_week),1,3),"-",day(Start_of_week), " to ", str_sub(months(End_of_week),1,3),"-",day(End_of_week)),
+         Week_before=paste(str_sub(months(date(Start_of_week)-7),1,3),"-",day(date(Start_of_week)-7), " to ", str_sub(months(date(End_of_week)-7),1,3),"-",day(date(End_of_week)-7))) %>%
+  filter(Date <= floor_date(max(Date), "week")-1) %>%
+  mutate(Current_week=ifelse(date(Date)+7 <= max(Date),"No","Yes")) %>%
+  filter(Date>="2021-01-23") %>% #Issues with historical data missing for some PTs - only taking last two weeks data for now.
+  arrange(Jurisdiction,datetime)
+
+SALT_weekly3 <- SALT_weekly2 %>%
+  group_by(Jurisdiction,Week, Start_of_week) %>%
+  summarise(days_reported=n(),
+            week_tests_performed=sum(tests_performed),
+            week_positive_tests=sum(positive_tests),
+            .groups="drop_last") %>%
+  mutate(week_negative_tests=week_tests_performed-week_positive_tests,
+         week_percent_positive=round(week_positive_tests/week_tests_performed,digits = 4),
+         avg_tests_per_day=round(week_tests_performed/days_reported))
+
+National_weekly <- SALT_weekly3 %>%
+  select(Week, Jurisdiction, Start_of_week, week_tests_performed, week_positive_tests, week_negative_tests, days_reported, avg_tests_per_day) %>%
+  group_by(Week, Start_of_week) %>%
+  summarise(across(where(is.numeric),sum),
+            .groups="drop_last") %>%
+  mutate(Jurisdiction="Canada",
+         week_percent_positive = week_positive_tests/week_tests_performed) %>%
+  arrange(Start_of_week) %>%
+  select(Week, Jurisdiction, week_tests_performed, week_positive_tests, week_negative_tests, week_percent_positive, avg_tests_per_day, days_reported)
+
+Provincial_weekly <- SALT_weekly3 %>%
+  arrange(Start_of_week) %>%
+  select(Week, Jurisdiction, week_tests_performed, week_positive_tests, week_negative_tests, week_percent_positive, avg_tests_per_day, days_reported)
+
+Testing_weekly <- rbind(National_weekly,Provincial_weekly) %>%
+  tidyr::drop_na() %>%
+  mutate(Week=gsub(" -","",Week)) %>%
+  mutate(Week=gsub("  to  Jan ","-",Week)) %>%
+  mutate(Week=gsub("  to  Feb ","-",Week)) %>%
+  mutate(Week=gsub("  to  Mar ","-",Week)) %>%
+  mutate(Week=gsub("  to  Apr ","-",Week)) %>%
+  mutate(Week=gsub("  to  May ","-",Week)) %>%
+  mutate(Week=gsub("  to  Jun ","-",Week)) %>%
+  mutate(Week=gsub("  to  Jul ","-",Week)) %>%
+  mutate(Week=gsub("  to  Aug ","-",Week)) %>%
+  mutate(Week=gsub("  to  Sep ","-",Week)) %>%
+  mutate(Week=gsub("  to  Oct ","-",Week)) %>%
+  mutate(Week=gsub("  to  Nov ","-",Week)) %>%
+  mutate(Week=gsub("  to  Dec ","-",Week)) %>%
+  group_by(Jurisdiction) %>%
+  mutate(Week_no = 1:n()) %>%
+  slice(tail(row_number(),12)) %>%
+  select(Week_no, Week, Jurisdiction, week_tests_performed,week_positive_tests,week_negative_tests,week_percent_positive,avg_tests_per_day, days_reported)
+
+Testing_weekly2 <- Testing_weekly %>%
+  group_by(Jurisdiction) %>%
+  slice(tail(row_number(),2)) %>%
+  mutate(this_week=max(Week_no),
+         week_label=ifelse(Week_no==this_week, "thisweek","lastweek")) %>%
+  select(Jurisdiction,week_label,avg_tests_per_day,week_percent_positive) %>%
+  pivot_longer(cols = c("avg_tests_per_day","week_percent_positive"),
+               names_to="type",
+               values_to="value") %>%
+  pivot_wider(names_from = c(week_label, type),
+              names_glue= "{type}_{week_label}" ,
+              values_from=value) %>%
+  mutate(change_in_tests=(avg_tests_per_day_thisweek-avg_tests_per_day_lastweek)/avg_tests_per_day_lastweek,
+         change_in_positivity=(week_percent_positive_thisweek-week_percent_positive_lastweek)/week_percent_positive_lastweek) %>%
+  select(Jurisdiction,week_percent_positive_thisweek)
+
+this_week_num<-max(Testing_weekly$Week_no)
+this_week_label<-unique(Testing_weekly$Week[Testing_weekly$Week_no==this_week_num])
+last_week_num<-max(Testing_weekly$Week_no)-1
+last_week_label<-unique(Testing_weekly$Week[Testing_weekly$Week_no==last_week_num])
+
+Testing_weekly3 <- Testing_weekly2 %>%
+  mutate(week_percent_positive_thisweek=percent(week_percent_positive_thisweek,accuracy=0.1)) %>%
+  rename(!!paste0("Percent Positivity (",this_week_label,")") := week_percent_positive_thisweek)

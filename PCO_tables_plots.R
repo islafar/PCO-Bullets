@@ -39,9 +39,10 @@ table1 <- table1a %>%
          "Number of negative tests per positive (last 7 days)"=Num_neg_per_pos,
          "Average number of tests performed per day for last 7 days"=Avg_tests_per_day,
          "Average number of tests performed per day for last 7 days per thousand"=Avg_tests_per_1000pop) %>%
-  select(-numdeathstoday,-cum_positive_tests) 
+  select(-numdeathstoday,-cum_positive_tests) %>%
+  left_join(Testing_weekly3, by=c("Location"="Jurisdiction"))
 
-table1 <- table1[c(1,2,3,6,4,5,7,8,9,10,11,12)]
+table1 <- table1[c(1,2,3,6,4,5,7,8,9,10,11,12,13)]
 table1 <- table1[order(factor(table1$Location,levels=c(prorder1))),]
 table1$Location[table1$Location == "Canada"] <- "Total"
 
