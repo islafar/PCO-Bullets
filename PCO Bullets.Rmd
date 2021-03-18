@@ -31,9 +31,7 @@ library(officer)
 ```{r Generate Figures, code=xfun::read_utf8('PCO_tables_plots.R'), results='asis', message=FALSE, warning=FALSE}
 ```
 
-::: {custom-style="Style3"}
-TABLE 1
-:::
+# TABLE 1
 
 ```{r Table1, message=FALSE, warning=FALSE, ft.align='left'}
 Table1 <- flextable(table1)
